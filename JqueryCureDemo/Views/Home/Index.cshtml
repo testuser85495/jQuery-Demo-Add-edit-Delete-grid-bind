@@ -1,0 +1,233 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model IEnumerable<JqueryCureDemo.Models.Student>
+<button class="btn btn-sm btn-primary m-2" id="BtnAddEmployee">Add Employee</button>
+<table class="table table-bordered table-hover text-center table-striped">
+    <thead>
+        <tr class="text-center">
+            <th>studentId</th>
+            <th>name</th>
+            <th>age</th>
+            <th>email</th>
+            <th>gender</th>
+            <th>address</th>
+            <th>operation</th>
+
+        </tr>
+    </thead>
+    <tbody class="text-center" id="table_data"></tbody>
+</table>
+
+<div class="madal fade modal" id="EmoloyeeModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="text-info modal-title" id="stuhead">Add student</h1>
+                <button class="close text-danger" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <div class="form-group" id="stu">
+                        <label>studentId</label>
+                        <input type="text" class="form-control" id="studentId" disabled="disabled" />
+                    </div>
+                    <div class="form-group">
+                        <label>name</label>
+                        <input type="text" placeholder="Enter Name" class="form-control" id="Name" />
+                    </div>
+                    <div class="form-group">
+                        <label>age</label>
+                        <input type="text" placeholder="Age" class="form-control" id="Age" />
+                    </div>
+                    <div class="form-group">
+                        <label>email</label>
+                        <input type="text" placeholder="Email" class="form-control" id="Email" />
+                    </div>
+                    <div class="form-group">
+                        <label id="Gender">Gender</label> <br />
+                        <input type="radio" name="gender" value="male"> Male
+                        <input type="radio" name="gender" value="female"> Female
+
+                    </div>
+                    <div class="form-group">
+                        <label for="Address">select address</label>
+                        <select name="cars" id="Address">
+                            <option value="select">select</option>
+                            <option value="saab">surat</option>
+                            <option value="Ahamdabad">Ahamdabad</option>
+                            <option value="Mumbai">Mumbai</option>
+                        </select>
+                    </div>
+                    @*<div class="form-group">
+                            <label>operation</label>
+                            <input type="text" placeholder="Address" class="form-control" id="Operation" />
+                        </div>*@
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-primary" onclick="AddStudent();" id="Addemployee">Save</button>
+                <button class="btn btn-outline-warning" onclick="UpdateStudent();" style="display:none" id="btnupdate">Update</button>
+                <button class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script>
+    $(document).ready(function () {
+        showEmployeeData();
+    })
+    function showEmployeeData() {
+        debugger;
+        $.ajax({
+            url: "/Home/studataList",
+            type: "Get",
+            dataType: "json",
+            contentType: "application/json;charset=utf-8;",
+            success: function (result, status, xhr) {
+                var Data = '';
+                $.each(result, function (index, item) {
+                    Data += '<tr>';
+                    Data += '<td>' + item.studentId + '<td>';
+                    Data += '<td>' + item.name + '<td>';
+                    Data += '<td>' + item.age + '<td>';
+                    Data += '<td>' + item.email + '<td>';
+                    Data += '<td>' + item.gender + '<td>';
+                    Data += '<td>' + item.address + '<td>';
+                    Data += '<td> <a href="#" class="btn btn-primary" onclick="Edit(' + item.studentId + ')"> Edit </a> || <a href="#" class="btn btn-danger" onclick="Delete(' + item.studentId + ')"> Delete </a></td>';
+                    Data += '</tr>';
+                });
+                $("#table_data").html(Data);
+            },
+
+            error: function () {
+                alert('data not get');
+            }
+        });
+    };
+
+    function AddStudent() {
+
+        var objdata = {
+            name: $('#Name').val(),
+            age: $('#Age').val(),
+            email: $('#Email').val(),
+            gender: $('#Gender').val(),
+            address: $('#Address').val(),
+        }
+        $.ajax({
+            url: "/Home/Addstu",
+            type: "Post",
+            data: 'stu',
+            contentType: "application/x-www-form-urlencoded;charset=utf-8;",
+            dataType: "json",
+            success: function () {
+
+                alert('Data Save');
+                cleartextbox();
+                showEmployeeData();
+                HideModalpopup();
+            },
+            error: function () {
+                alert('No Data Found');
+
+            }
+
+        })
+    }
+    function cleartextbox() {
+        $('#Name').val("");
+        $('#Age').val("");
+        $('#Email').val("");
+        $('#Gender').val("");
+        $('#Address').val("");
+    }
+    function HideModalpopup() {
+        $('#EmoloyeeModal').modal('hide');
+    }
+
+    function Delete(studentId) {
+
+        if (confirm("Are you sure you want to delete record")) {
+            $.ajax({
+                url: "/home/Delete?studentId=" + studentId,
+                success: function () {
+                    alert('Record Delete');
+                    showEmployeeData();
+                },
+                error: function () {
+                    alert('Record not delete');
+                }
+            })
+        }
+
+    }
+    function Edit(studentId) {
+
+        $.ajax({
+            url: "/Home/Edit?studentId=" + studentId,
+            type: "Get",
+            contentType: "application/json;charset=utf-8;",
+            dataType: "json",
+            success: function (responce) {
+                $('#EmoloyeeModal').modal('show');
+                $("#studentId").val(responce.studentId)
+                $('#Name').val(responce.name);
+                $('#Age').val(responce.age);
+                $('#Email').val(responce.email);
+                $('#Gender').val(responce.gender);
+                $('#Address').val(responce.address);
+                $('#Addemployee').css('display', 'none');
+                $('#btnupdate').css('display', 'block');
+                $('#stuhead').text("Update Record");
+            },
+            error: function () {
+                alert('Data not found');
+            }
+        })
+
+    }
+
+    $("#BtnAddEmployee").click(function () {
+        cleartextbox();
+        $("#EmoloyeeModal").modal('show');
+        $('#stu').hide();
+        $('#Addemployee').css('display', 'block');
+        $('#btnupdate').css('display', 'none');
+        $('#stuhead').text("Add student");
+    })
+
+    function UpdateStudent() {
+
+        var objdata = {
+            studentId: $('#studentId').val(),
+            name: $('#Name').val(),
+            age: $('#Age').val(),
+            email: $('#Email').val(),
+            gender: $('#Gender').val(),
+            address: $('#Address').val()
+        }
+        $.ajax({
+            url: "/Home/Update",
+            type: "Post",
+            data: objdata,
+            contentType: "application/x-www-form-urlencoded;charset=utf-8;",
+            dataType: "json",
+            success: function () {
+
+                alert('Data Save');
+                cleartextbox();
+                showEmployeeData();
+                HideModalpopup();
+            },
+            error: function () {
+                alert('Data not Save');
+
+            }
+        })
+    }
+
+
+</script>
